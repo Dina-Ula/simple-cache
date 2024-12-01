@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: simple-cache
+  name: simple-cache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simple-cache
+  template:
+    metadata:
+      labels:
+        app: simple-cache
+    spec:
+      initContainers:
+        - image: devinaction/simple-cache-sidecar
+          name: simple-cache-sidecar
+          restartPolicy: Always
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8089
+            periodSeconds: 10
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8089
+            periodSeconds: 5
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8089
+            periodSeconds: 5
+            failureThreshold: 2
+      containers:
+        - image: devinaction/simple-cache-main
+          name: simple-cache-main
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            periodSeconds: 10
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            periodSeconds: 5
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            periodSeconds: 5
+            failureThreshold: 2
